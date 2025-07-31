@@ -105,6 +105,44 @@ export default function Products() {
     });
   };
 
+  const handleAddToWishlist = async (productId: string) => {
+    if (!user) {
+      toast({
+        title: 'Please sign in',
+        description: 'You need to be signed in to add items to wishlist.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('wishlist_items')
+      .insert({
+        user_id: user.id,
+        product_id: productId,
+      });
+
+    if (error) {
+      if (error.code === '23505') { // Unique constraint violation
+        toast({
+          title: 'Already in wishlist',
+          description: 'This item is already in your wishlist.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to add item to wishlist.',
+          variant: 'destructive',
+        });
+      }
+    } else {
+      toast({
+        title: 'Added to wishlist',
+        description: 'Item added to your wishlist successfully.',
+      });
+    }
+  };
   const handlePriceRangeChange = (newRange: number[]) => {
     setPriceRange(newRange);
     setFilters({
@@ -237,6 +275,7 @@ export default function Products() {
                       variant="outline"
                       size="icon"
                       className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleAddToWishlist(product.id)}
                     >
                       <Heart className="w-4 h-4" />
                     </Button>
